@@ -11,6 +11,10 @@ branchés sur un Arduino, via un module Bluetooth HC-05.
 | `arduino/PowerFlow/` | Croquis Arduino |
 | `.github/workflows/` | Compilation automatique de l'APK |
 
+Pour comprendre **comment le code fonctionne** (utile pour un exposé ou pour
+s'en inspirer), voir [EXPLICATIONS.md](EXPLICATIONS.md) — écrit pour être
+compréhensible sans connaissances préalables en Kotlin ou en Arduino.
+
 ## Obtenir l'APK sans rien installer
 
 1. Créer un dépôt sur github.com (public ou privé).
