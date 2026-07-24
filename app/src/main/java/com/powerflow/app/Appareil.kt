@@ -1,6 +1,7 @@
 package com.powerflow.app
 
 import android.content.Context
+import androidx.annotation.DrawableRes
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -8,18 +9,39 @@ import org.json.JSONObject
  * Un appareil pilotable du prototype.
  *
  * @param nom       libelle affiche
- * @param icone     emoji affiche a gauche
+ * @param icone     pictogramme vectoriel affiche a gauche (res drawable)
  * @param broche    broche Arduino correspondante (2 a 9)
  * @param allumer   caractere envoye pour allumer
  * @param eteindre  caractere envoye pour eteindre
  */
 data class Appareil(
     val nom: String,
-    val icone: String,
+    @DrawableRes val icone: Int,
     val broche: Int,
     val allumer: Char,
     val eteindre: Char
 )
+
+/**
+ * Un pictogramme proposable dans le formulaire d'ajout/modification.
+ * `cle` est le nom utilisé pour la sauvegarde (les identifiants @DrawableRes
+ * ne sont pas garantis stables entre deux compilations de l'application).
+ */
+data class Picto(val libelle: String, @DrawableRes val id: Int, val cle: String)
+
+object Pictos {
+    val liste = listOf(
+        Picto("Lampe", R.drawable.ic_lampe, "ic_lampe"),
+        Picto("Ventilateur", R.drawable.ic_ventilateur, "ic_ventilateur"),
+        Picto("Télévision", R.drawable.ic_television, "ic_television"),
+        Picto("Prise", R.drawable.ic_prise, "ic_prise")
+    )
+
+    fun parCle(cle: String): Int = liste.firstOrNull { it.cle == cle }?.id ?: R.drawable.ic_prise
+    fun cleDe(id: Int): String = liste.firstOrNull { it.id == id }?.cle ?: liste.last().cle
+    fun parLibelle(libelle: String): Int? = liste.firstOrNull { it.libelle == libelle }?.id
+    fun libelleDe(id: Int): String = liste.firstOrNull { it.id == id }?.libelle ?: liste.last().libelle
+}
 
 /**
  * Liste des appareils, personnalisable depuis l'application (bouton "+" et
@@ -39,11 +61,11 @@ object AppareilsStore {
     const val BROCHE_MAX = 9
 
     val defaut = listOf(
-        Appareil("Lampe",        "💡", 2, 'A', 'a'),
-        Appareil("Ventilateur",  "🌀", 3, 'B', 'b'),
-        Appareil("Television",   "📺", 4, 'C', 'c'),
-        Appareil("Prise 4",      "🔌", 5, 'D', 'd'),
-        Appareil("Prise 5",      "🔌", 6, 'E', 'e')
+        Appareil("Lampe",       R.drawable.ic_lampe,       2, 'A', 'a'),
+        Appareil("Ventilateur", R.drawable.ic_ventilateur, 3, 'B', 'b'),
+        Appareil("Télévision",  R.drawable.ic_television,  4, 'C', 'c'),
+        Appareil("Prise 4",     R.drawable.ic_prise,       5, 'D', 'd'),
+        Appareil("Prise 5",     R.drawable.ic_prise,       6, 'E', 'e')
     )
 
     private const val PREFS = "powerflow_appareils"
@@ -57,7 +79,7 @@ object AppareilsStore {
                 val o = tableau.getJSONObject(i)
                 Appareil(
                     nom = o.getString("nom"),
-                    icone = o.getString("icone"),
+                    icone = Pictos.parCle(o.getString("icone")),
                     broche = o.getInt("broche"),
                     allumer = o.getString("allumer")[0],
                     eteindre = o.getString("eteindre")[0]
@@ -74,7 +96,7 @@ object AppareilsStore {
             tableau.put(
                 JSONObject()
                     .put("nom", a.nom)
-                    .put("icone", a.icone)
+                    .put("icone", Pictos.cleDe(a.icone))
                     .put("broche", a.broche)
                     .put("allumer", a.allumer.toString())
                     .put("eteindre", a.eteindre.toString())

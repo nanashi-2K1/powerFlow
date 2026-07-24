@@ -32,7 +32,7 @@
     <string name="astuce_appui_long">Appui long sur une tuile pour la modifier ou la supprimer.</string>
 
     <string name="champ_nom">Nom</string>
-    <string name="champ_icone">Icône (emoji)</string>
+    <string name="champ_icone">Icône</string>
     <string name="champ_broche">Broche Arduino (2 à 9)</string>
     <string name="champ_allumer">Caractère « allumer »</string>
     <string name="champ_eteindre">Caractère « éteindre »</string>
@@ -42,7 +42,7 @@
     <string name="reinitialiser_detail">Retrouver la liste d\'origine (Lampe, Ventilateur, Télévision, Prise 4, Prise 5) ? Vos ajouts et modifications seront perdus.</string>
 
     <string name="erreur_nom">Donnez un nom à l\'appareil.</string>
-    <string name="erreur_icone">Choisissez une icône (un emoji, par exemple).</string>
+    <string name="erreur_icone">Choisissez une icône dans la liste.</string>
     <string name="erreur_broche">La broche doit être comprise entre %1$d et %2$d.</string>
     <string name="erreur_caractere">Les caractères « allumer » et « éteindre » doivent être une seule lettre chacun.</string>
     <string name="erreur_caractere_identique">Les caractères « allumer » et « éteindre » doivent être différents.</string>

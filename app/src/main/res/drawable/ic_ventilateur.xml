@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pictogramme Ventilateur (4 pales + moyeu). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp"
+    android:height="26dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path android:fillColor="#00000000" android:strokeColor="#3A3A3C"
+        android:strokeWidth="1.5" android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M12,11 c-0.4,-3 0.6,-6 2.5,-6.4 C16,5 15.7,8 13.5,9.8 12.9,10.3 12.4,10.7 12,11 Z" />
+    <path android:fillColor="#00000000" android:strokeColor="#3A3A3C"
+        android:strokeWidth="1.5" android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M13,12 c3,-0.4 6,0.6 6.4,2.5 C19,16 16,15.7 14.2,13.5 13.7,12.9 13.3,12.4 13,12 Z" />
+    <path android:fillColor="#00000000" android:strokeColor="#3A3A3C"
+        android:strokeWidth="1.5" android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M11,13 c0.4,3 -0.6,6 -2.5,6.4 C7,19 7.3,16 9.5,14.2 10.1,13.7 10.6,13.3 11,13 Z" />
+    <path android:fillColor="#00000000" android:strokeColor="#3A3A3C"
+        android:strokeWidth="1.5" android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M11,12 c-3,0.4 -6,-0.6 -6.4,-2.5 C5,8 8,8.3 9.8,10.5 10.3,11.1 10.7,11.6 11,12 Z" />
+    <path android:fillColor="#3A3A3C"
+        android:pathData="M10.4,12 a1.6,1.6 0 1,0 3.2,0 a1.6,1.6 0 1,0 -3.2,0 Z" />
+</vector>

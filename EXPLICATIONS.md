@@ -100,7 +100,7 @@ nom).
 ```kotlin
 data class Appareil(
     val nom: String,
-    val icone: String,
+    @DrawableRes val icone: Int,
     val broche: Int,
     val allumer: Char,
     val eteindre: Char
@@ -109,19 +109,29 @@ data class Appareil(
 
 Une `data class` est une classe qui ne sert qu'à regrouper des informations
 liées — ici, tout ce qu'il faut savoir sur un appareil : son nom affiché,
-son icône, sa broche Arduino et les deux caractères à envoyer. C'est
-l'équivalent, côté téléphone, du tableau `broches`/`CMD_ALLUMER` vu côté
-Arduino : les deux doivent rester cohérents.
+son icône (un pictogramme vectoriel, comme `ic_lampe.xml`), sa broche
+Arduino et les deux caractères à envoyer. C'est l'équivalent, côté
+téléphone, du tableau `broches`/`CMD_ALLUMER` vu côté Arduino : les deux
+doivent rester cohérents.
+
+`icone` est un simple numéro identifiant un dessin vectoriel compilé dans
+l'application (`R.drawable.ic_lampe`, `R.drawable.ic_prise`...) plutôt
+qu'un caractère emoji : ça permet au code de le teinter dynamiquement
+(blanc quand la tuile est active, gris sinon), ce qu'on ne peut pas faire
+avec du texte.
 
 `AppareilsStore`, dans le même fichier, se charge de **sauvegarder** cette
 liste sur le téléphone (via les `SharedPreferences`, un petit espace de
 stockage propre à l'application) pour qu'elle soit toujours là au
-prochain lancement, même après avoir ajouté ou modifié un appareil. Les
-données sont converties en texte au format **JSON** — un format universel
-pour écrire des informations structurées, ex. :
+prochain lancement, même après avoir ajouté ou modifié un appareil. Comme
+ce numéro d'icône peut changer d'une compilation à l'autre, on sauvegarde
+plutôt son **nom** (`"ic_lampe"`) et on le retrouve au chargement grâce au
+petit registre `Pictos`. Les données sont converties en texte au format
+**JSON** — un format universel pour écrire des informations structurées,
+ex. :
 
 ```json
-{"nom": "Lampe", "icone": "💡", "broche": 2, "allumer": "A", "eteindre": "a"}
+{"nom": "Lampe", "icone": "ic_lampe", "broche": 2, "allumer": "A", "eteindre": "a"}
 ```
 
 ### `BluetoothSerial.kt` — la liaison radio

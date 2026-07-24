@@ -11,6 +11,9 @@ import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -112,44 +115,65 @@ class TableauBordActivity : AppCompatActivity() {
 
     // ---------------------------------------------------------------- interface
 
-    /** (Re)crée une tuile par appareil de la liste courante. */
+    /** (Re)crée une grille de 2 tuiles par ligne, une par appareil de la liste courante. */
     private fun construireAppareils() {
         conteneur.removeAllViews()
         tuiles.clear()
         val inflater = LayoutInflater.from(this)
 
-        for (appareil in appareils) {
-            val vue = inflater.inflate(R.layout.ligne_appareil, conteneur, false)
+        appareils.chunked(2).forEach { paire ->
+            val ligne = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(12) }
+            }
 
-            vue.findViewById<TextView>(R.id.icone).text = appareil.icone
-            vue.findViewById<TextView>(R.id.nom).text = appareil.nom
-            vue.findViewById<TextView>(R.id.detail).text =
-                getString(R.string.detail_appareil, appareil.broche, appareil.allumer, appareil.eteindre)
+            paire.forEachIndexed { index, appareil ->
+                val vue = inflater.inflate(R.layout.ligne_appareil, ligne, false)
 
-            val tuile = Tuile(vue, appareil)
+                vue.findViewById<ImageView>(R.id.icone).setImageResource(appareil.icone)
+                vue.findViewById<TextView>(R.id.nom).text = appareil.nom
+                vue.findViewById<TextView>(R.id.detail).text =
+                    getString(R.string.detail_appareil, appareil.broche, appareil.allumer, appareil.eteindre)
 
-            vue.setOnClickListener {
-                if (!liaison.estConnecte) return@setOnClickListener
+                val tuile = Tuile(vue, appareil)
 
-                val nouvelEtat = !tuile.actif
-                val caractere = if (nouvelEtat) appareil.allumer else appareil.eteindre
-                if (liaison.envoyer(caractere)) {
-                    tuile.actif = nouvelEtat
-                    styleTuile(tuile, connecte = true)
-                    noter("${appareil.nom} ${if (nouvelEtat) "allumé" else "éteint"}  ->  $caractere")
-                } else {
-                    noter("Envoi impossible, vérifiez la connexion.")
+                vue.setOnClickListener {
+                    if (!liaison.estConnecte) return@setOnClickListener
+
+                    val nouvelEtat = !tuile.actif
+                    val caractere = if (nouvelEtat) appareil.allumer else appareil.eteindre
+                    if (liaison.envoyer(caractere)) {
+                        tuile.actif = nouvelEtat
+                        styleTuile(tuile, connecte = true)
+                        noter("${appareil.nom} ${if (nouvelEtat) "allumé" else "éteint"}  ->  $caractere")
+                    } else {
+                        noter("Envoi impossible, vérifiez la connexion.")
+                    }
                 }
+
+                vue.setOnLongClickListener {
+                    ouvrirDialogueAppareil(appareil)
+                    true
+                }
+
+                tuiles += tuile
+
+                val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                if (index == 0) params.marginEnd = dp(12)
+                ligne.addView(vue, params)
+                styleTuile(tuile, connecte = liaison.estConnecte)
             }
 
-            vue.setOnLongClickListener {
-                ouvrirDialogueAppareil(appareil)
-                true
+            if (paire.size == 1) {
+                // Nombre impair d'appareils : un espace invisible occupe la
+                // deuxième colonne pour garder la même largeur de carte.
+                ligne.addView(View(this), LinearLayout.LayoutParams(0, 0, 1f))
             }
 
-            tuiles += tuile
-            conteneur.addView(vue)
-            styleTuile(tuile, connecte = liaison.estConnecte)
+            conteneur.addView(ligne)
         }
     }
 
@@ -157,18 +181,23 @@ class TableauBordActivity : AppCompatActivity() {
     private fun ouvrirDialogueAppareil(existant: Appareil?) {
         val vue = LayoutInflater.from(this).inflate(R.layout.dialogue_appareil, null)
         val champNom = vue.findViewById<TextInputEditText>(R.id.champNom)
-        val champIcone = vue.findViewById<TextInputEditText>(R.id.champIcone)
+        val champIcone = vue.findViewById<AutoCompleteTextView>(R.id.champIcone)
         val champBroche = vue.findViewById<TextInputEditText>(R.id.champBroche)
         val champAllumer = vue.findViewById<TextInputEditText>(R.id.champAllumer)
         val champEteindre = vue.findViewById<TextInputEditText>(R.id.champEteindre)
 
+        champIcone.setAdapter(
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, Pictos.liste.map { it.libelle })
+        )
+
         if (existant != null) {
             champNom.setText(existant.nom)
-            champIcone.setText(existant.icone)
+            champIcone.setText(Pictos.libelleDe(existant.icone), false)
             champBroche.setText(existant.broche.toString())
             champAllumer.setText(existant.allumer.toString())
             champEteindre.setText(existant.eteindre.toString())
         } else {
+            champIcone.setText(Pictos.liste.first().libelle, false)
             val brocheLibre = (AppareilsStore.BROCHE_MIN..AppareilsStore.BROCHE_MAX)
                 .firstOrNull { pin -> appareils.none { it.broche == pin } }
             if (brocheLibre != null) champBroche.setText(brocheLibre.toString())
@@ -194,7 +223,7 @@ class TableauBordActivity : AppCompatActivity() {
         // dialogue doit rester ouvert au lieu de se fermer.
         dialogue.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
             val nom = champNom.text?.toString()?.trim().orEmpty()
-            val icone = champIcone.text?.toString()?.trim().orEmpty()
+            val icone = Pictos.parLibelle(champIcone.text?.toString()?.trim().orEmpty())
             val broche = champBroche.text?.toString()?.trim()?.toIntOrNull()
             val allumer = champAllumer.text?.toString()?.trim()?.singleOrNull()
             val eteindre = champEteindre.text?.toString()?.trim()?.singleOrNull()
@@ -205,7 +234,7 @@ class TableauBordActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val nouveau = Appareil(nom, icone, broche!!, allumer!!, eteindre!!)
+            val nouveau = Appareil(nom, icone!!, broche!!, allumer!!, eteindre!!)
             if (existant != null) {
                 val index = appareils.indexOfFirst { it.broche == existant.broche }
                 appareils[index] = nouveau
@@ -221,14 +250,14 @@ class TableauBordActivity : AppCompatActivity() {
     /** Renvoie un message d'erreur si la saisie est invalide, sinon null. */
     private fun validerAppareil(
         nom: String,
-        icone: String,
+        icone: Int?,
         broche: Int?,
         allumer: Char?,
         eteindre: Char?,
         existant: Appareil?
     ): String? {
         if (nom.isEmpty()) return getString(R.string.erreur_nom)
-        if (icone.isEmpty()) return getString(R.string.erreur_icone)
+        if (icone == null) return getString(R.string.erreur_icone)
         if (broche == null || broche !in AppareilsStore.BROCHE_MIN..AppareilsStore.BROCHE_MAX) {
             return getString(R.string.erreur_broche, AppareilsStore.BROCHE_MIN, AppareilsStore.BROCHE_MAX)
         }
@@ -287,6 +316,14 @@ class TableauBordActivity : AppCompatActivity() {
 
         vue.findViewById<View>(R.id.point).backgroundTintList =
             android.content.res.ColorStateList.valueOf(if (allume) blanc else inactif)
+
+        val teintePicto = when {
+            allume -> blanc
+            connecte -> ContextCompat.getColor(this, R.color.pf_icone)
+            else -> inactif
+        }
+        vue.findViewById<ImageView>(R.id.icone).imageTintList =
+            android.content.res.ColorStateList.valueOf(teintePicto)
     }
 
     private fun majEtat(connecte: Boolean, message: String) {

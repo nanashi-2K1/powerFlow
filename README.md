@@ -71,8 +71,9 @@ l'affiche dans le journal, en bas de l'écran.
 
 Dans le tableau de bord :
 
-- **+ Ajouter** (en haut de la liste) ouvre un formulaire : nom, icône (emoji),
-  broche (2 à 9) et caractères à envoyer pour allumer/éteindre.
+- **+ Ajouter** (en haut de la liste) ouvre un formulaire : nom, icône (à
+  choisir parmi les pictogrammes disponibles), broche (2 à 9) et caractères
+  à envoyer pour allumer/éteindre.
 - **Appui long** sur une tuile ouvre le même formulaire pré-rempli, avec un
   bouton **Supprimer**.
 - **Appui long sur + Ajouter** réinitialise la liste par défaut (les 5
