@@ -52,16 +52,41 @@ gradle assembleDebug
 | Télévision | 4 | `C` | `c` |
 | Prise 4 | 5 | `D` | `d` |
 | Prise 5 | 6 | `E` | `e` |
+| *libre* | 7 | `F` | `f` |
+| *libre* | 8 | `G` | `g` |
+| *libre* | 9 | `H` | `h` |
+
+Le croquis reconnaît 8 broches (2 à 9) ; seules les 5 premières sont câblées
+dans le montage d'origine. Les broches 7-9 sont prêtes à l'emploi pour un
+appareil supplémentaire câblé plus tard.
 
 L'Arduino renvoie `ON:1` ou `OFF:1` en accusé de réception ; l'application
 l'affiche dans le journal, en bas de l'écran.
 
-## Modifier la liste des appareils
+## Ajouter, modifier ou supprimer un appareil depuis l'application
 
-Deux fichiers à garder synchronisés :
+Dans le tableau de bord :
 
-- `app/src/main/java/com/powerflow/app/Appareil.kt` — objet `Appareils.liste`
-- `arduino/PowerFlow/PowerFlow.ino` — tableaux `broches`, `CMD_ALLUMER`, `CMD_ETEINDRE`
+- **+ Ajouter** (en haut de la liste) ouvre un formulaire : nom, icône (emoji),
+  broche (2 à 9) et caractères à envoyer pour allumer/éteindre.
+- **Appui long** sur une tuile ouvre le même formulaire pré-rempli, avec un
+  bouton **Supprimer**.
+- **Appui long sur + Ajouter** réinitialise la liste par défaut (les 5
+  appareils d'origine).
+
+La liste est conservée sur le téléphone (SharedPreferences) entre deux
+lancements. L'application empêche les doublons de broche ou de caractère,
+mais **ne peut pas créer de nouvelle broche physique** : un appareil ajouté
+ne fonctionnera que si
+
+1. un relais est réellement câblé sur la broche choisie, et
+2. le même caractère est défini pour cette broche dans
+   `arduino/PowerFlow/PowerFlow.ino` (déjà le cas pour les broches 2-9 avec
+   les lettres A-H, voir tableau ci-dessus).
+
+Pour changer le comportement du croquis lui-même (au-delà de 8 appareils, ou
+d'autres broches), modifier `arduino/PowerFlow/PowerFlow.ino` — tableaux
+`broches`, `CMD_ALLUMER`, `CMD_ETEINDRE` — et le retéléverser sur la carte.
 
 ## Notes de câblage
 

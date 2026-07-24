@@ -74,13 +74,41 @@
         android:background="@color/pf_bord" />
 
     <!-- Appareils -->
-    <TextView
-        style="@style/StyleSurtitre"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="18dp"
-        android:layout_marginBottom="12dp"
-        android:text="@string/appareils" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            style="@style/StyleSurtitre"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/appareils" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/boutonAjouter"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:paddingHorizontal="10dp"
+            android:text="@string/ajouter_symbole"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/StyleMesure"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="@string/astuce_appui_long"
+        android:textSize="11sp" />
 
     <ScrollView
         android:layout_width="match_parent"

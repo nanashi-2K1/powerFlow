@@ -10,7 +10,13 @@
     C / c  ->  appareil 3  (Television)    broche 4
     D / d  ->  appareil 4                  broche 5
     E / e  ->  appareil 5                  broche 6
-  Majuscule = allumer, minuscule = eteindre.
+    F / f  ->  broche libre                broche 7
+    G / g  ->  broche libre                broche 8
+    H / h  ->  broche libre                broche 9
+  Majuscule = allumer, minuscule = eteindre. Les broches F/G/H ne sont pas
+  cablees par defaut : elles permettent d'ajouter un appareil depuis
+  l'application (bouton "+") sans reflasher la carte, une fois un relais
+  branche dessus.
 
   Cablage du HC-05 :
     HC-05 TX  ->  Arduino broche 10 (RX)
@@ -19,18 +25,21 @@
 
   La broche RX du HC-05 fonctionne en 3,3 V. Un pont diviseur de tension
   entre la broche 11 et le RX evite de l'endommager a la longue.
+
+  Broches 0 et 1 : reservees au port USB (Serial). Broches 10 et 11 :
+  reservees au HC-05 (SoftwareSerial). Ne pas les reutiliser.
 */
 
 #include <SoftwareSerial.h>
 
 SoftwareSerial BT(10, 11);   // RX, TX
 
-const int NOMBRE_APPAREILS = 5;
-const int broches[NOMBRE_APPAREILS] = { 2, 3, 4, 5, 6 };
+const int NOMBRE_APPAREILS = 8;
+const int broches[NOMBRE_APPAREILS] = { 2, 3, 4, 5, 6, 7, 8, 9 };
 
 // Caracteres reconnus, dans le meme ordre que les broches.
-const char CMD_ALLUMER[]  = "ABCDE";
-const char CMD_ETEINDRE[] = "abcde";
+const char CMD_ALLUMER[]  = "ABCDEFGH";
+const char CMD_ETEINDRE[] = "abcdefgh";
 
 /*
   La plupart des modules relais du commerce sont actifs a l'etat BAS :

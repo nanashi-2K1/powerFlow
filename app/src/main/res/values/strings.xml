@@ -22,4 +22,30 @@
     <string name="aucun_appareil_detail">Appairez le HC-05 dans les réglages Bluetooth du téléphone, puis revenez ici. Le code est en général 1234 ou 0000.</string>
     <string name="ouvrir_reglages">Ouvrir les réglages</string>
     <string name="annuler">Annuler</string>
+
+    <string name="ajouter_symbole">+ Ajouter</string>
+    <string name="ajouter_appareil">Nouvel appareil</string>
+    <string name="modifier_appareil">Modifier l\'appareil</string>
+    <string name="ajouter">Ajouter</string>
+    <string name="enregistrer">Enregistrer</string>
+    <string name="supprimer">Supprimer</string>
+    <string name="astuce_appui_long">Appui long sur une tuile pour la modifier ou la supprimer.</string>
+
+    <string name="champ_nom">Nom</string>
+    <string name="champ_icone">Icône (emoji)</string>
+    <string name="champ_broche">Broche Arduino (2 à 9)</string>
+    <string name="champ_allumer">Caractère « allumer »</string>
+    <string name="champ_eteindre">Caractère « éteindre »</string>
+    <string name="aide_broches">Les broches 2 à 9 sont reconnues par le croquis Arduino fourni (10 et 11 sont prises par le HC-05). Un nouvel appareil ne fonctionnera que si un relais y est câblé et si les mêmes caractères sont définis dans PowerFlow.ino.</string>
+
+    <string name="reinitialiser_titre">Réinitialiser les appareils</string>
+    <string name="reinitialiser_detail">Retrouver la liste d\'origine (Lampe, Ventilateur, Télévision, Prise 4, Prise 5) ? Vos ajouts et modifications seront perdus.</string>
+
+    <string name="erreur_nom">Donnez un nom à l\'appareil.</string>
+    <string name="erreur_icone">Choisissez une icône (un emoji, par exemple).</string>
+    <string name="erreur_broche">La broche doit être comprise entre %1$d et %2$d.</string>
+    <string name="erreur_caractere">Les caractères « allumer » et « éteindre » doivent être une seule lettre chacun.</string>
+    <string name="erreur_caractere_identique">Les caractères « allumer » et « éteindre » doivent être différents.</string>
+    <string name="erreur_broche_utilisee">Cette broche est déjà utilisée par un autre appareil.</string>
+    <string name="erreur_caractere_utilise">Ce caractère est déjà utilisé par un autre appareil.</string>
 </resources>

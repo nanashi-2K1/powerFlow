@@ -14,11 +14,13 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -38,10 +40,12 @@ class TableauBordActivity : AppCompatActivity() {
     private lateinit var pastille: View
     private lateinit var etatTexte: TextView
     private lateinit var boutonConnexion: MaterialButton
+    private lateinit var boutonAjouter: MaterialButton
     private lateinit var conteneur: LinearLayout
     private lateinit var journal: TextView
     private lateinit var journalScroll: ScrollView
 
+    private lateinit var appareils: MutableList<Appareil>
     private val tuiles = mutableListOf<Tuile>()
     private val heure = SimpleDateFormat("HH:mm:ss", Locale.FRANCE)
 
@@ -72,9 +76,12 @@ class TableauBordActivity : AppCompatActivity() {
         pastille = findViewById(R.id.pastille)
         etatTexte = findViewById(R.id.etatTexte)
         boutonConnexion = findViewById(R.id.boutonConnexion)
+        boutonAjouter = findViewById(R.id.boutonAjouter)
         conteneur = findViewById(R.id.conteneurAppareils)
         journal = findViewById(R.id.journal)
         journalScroll = findViewById(R.id.journalScroll)
+
+        appareils = AppareilsStore.charger(this)
 
         liaison = BluetoothSerial(
             onEtat = { connecte, message -> majEtat(connecte, message) },
@@ -92,6 +99,9 @@ class TableauBordActivity : AppCompatActivity() {
             }
         }
 
+        boutonAjouter.setOnClickListener { ouvrirDialogueAppareil(null) }
+        boutonAjouter.setOnLongClickListener { confirmerReinitialisation(); true }
+
         noter("Appairez d'abord le HC-05 dans les réglages Bluetooth du téléphone (code 1234 ou 0000).")
     }
 
@@ -102,11 +112,13 @@ class TableauBordActivity : AppCompatActivity() {
 
     // ---------------------------------------------------------------- interface
 
-    /** Crée une tuile par appareil déclaré dans Appareils.liste. */
+    /** (Re)crée une tuile par appareil de la liste courante. */
     private fun construireAppareils() {
+        conteneur.removeAllViews()
+        tuiles.clear()
         val inflater = LayoutInflater.from(this)
 
-        for (appareil in Appareils.liste) {
+        for (appareil in appareils) {
             val vue = inflater.inflate(R.layout.ligne_appareil, conteneur, false)
 
             vue.findViewById<TextView>(R.id.icone).text = appareil.icone
@@ -130,10 +142,121 @@ class TableauBordActivity : AppCompatActivity() {
                 }
             }
 
+            vue.setOnLongClickListener {
+                ouvrirDialogueAppareil(appareil)
+                true
+            }
+
             tuiles += tuile
             conteneur.addView(vue)
-            styleTuile(tuile, connecte = false)
+            styleTuile(tuile, connecte = liaison.estConnecte)
         }
+    }
+
+    /** Ouvre le dialogue d'ajout (existant == null) ou de modification/suppression. */
+    private fun ouvrirDialogueAppareil(existant: Appareil?) {
+        val vue = LayoutInflater.from(this).inflate(R.layout.dialogue_appareil, null)
+        val champNom = vue.findViewById<TextInputEditText>(R.id.champNom)
+        val champIcone = vue.findViewById<TextInputEditText>(R.id.champIcone)
+        val champBroche = vue.findViewById<TextInputEditText>(R.id.champBroche)
+        val champAllumer = vue.findViewById<TextInputEditText>(R.id.champAllumer)
+        val champEteindre = vue.findViewById<TextInputEditText>(R.id.champEteindre)
+
+        if (existant != null) {
+            champNom.setText(existant.nom)
+            champIcone.setText(existant.icone)
+            champBroche.setText(existant.broche.toString())
+            champAllumer.setText(existant.allumer.toString())
+            champEteindre.setText(existant.eteindre.toString())
+        } else {
+            val brocheLibre = (AppareilsStore.BROCHE_MIN..AppareilsStore.BROCHE_MAX)
+                .firstOrNull { pin -> appareils.none { it.broche == pin } }
+            if (brocheLibre != null) champBroche.setText(brocheLibre.toString())
+        }
+
+        val builder = AlertDialog.Builder(this)
+            .setTitle(if (existant == null) R.string.ajouter_appareil else R.string.modifier_appareil)
+            .setView(vue)
+            .setNegativeButton(R.string.annuler, null)
+            .setPositiveButton(if (existant == null) R.string.ajouter else R.string.enregistrer, null)
+
+        if (existant != null) {
+            builder.setNeutralButton(R.string.supprimer) { _, _ ->
+                appareils.removeAll { it.broche == existant.broche }
+                AppareilsStore.sauvegarder(this, appareils)
+                construireAppareils()
+            }
+        }
+
+        val dialogue = builder.show()
+
+        // Bouton positif intercepté à la main : en cas d'erreur de saisie, le
+        // dialogue doit rester ouvert au lieu de se fermer.
+        dialogue.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val nom = champNom.text?.toString()?.trim().orEmpty()
+            val icone = champIcone.text?.toString()?.trim().orEmpty()
+            val broche = champBroche.text?.toString()?.trim()?.toIntOrNull()
+            val allumer = champAllumer.text?.toString()?.trim()?.singleOrNull()
+            val eteindre = champEteindre.text?.toString()?.trim()?.singleOrNull()
+
+            val erreur = validerAppareil(nom, icone, broche, allumer, eteindre, existant)
+            if (erreur != null) {
+                Toast.makeText(this, erreur, Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
+            val nouveau = Appareil(nom, icone, broche!!, allumer!!, eteindre!!)
+            if (existant != null) {
+                val index = appareils.indexOfFirst { it.broche == existant.broche }
+                appareils[index] = nouveau
+            } else {
+                appareils += nouveau
+            }
+            AppareilsStore.sauvegarder(this, appareils)
+            construireAppareils()
+            dialogue.dismiss()
+        }
+    }
+
+    /** Renvoie un message d'erreur si la saisie est invalide, sinon null. */
+    private fun validerAppareil(
+        nom: String,
+        icone: String,
+        broche: Int?,
+        allumer: Char?,
+        eteindre: Char?,
+        existant: Appareil?
+    ): String? {
+        if (nom.isEmpty()) return getString(R.string.erreur_nom)
+        if (icone.isEmpty()) return getString(R.string.erreur_icone)
+        if (broche == null || broche !in AppareilsStore.BROCHE_MIN..AppareilsStore.BROCHE_MAX) {
+            return getString(R.string.erreur_broche, AppareilsStore.BROCHE_MIN, AppareilsStore.BROCHE_MAX)
+        }
+        if (allumer == null || eteindre == null || !allumer.isLetter() || !eteindre.isLetter()) {
+            return getString(R.string.erreur_caractere)
+        }
+        if (allumer == eteindre) return getString(R.string.erreur_caractere_identique)
+
+        val autres = appareils.filter { it.broche != existant?.broche }
+        if (autres.any { it.broche == broche }) return getString(R.string.erreur_broche_utilisee)
+
+        val caracteresPris = autres.flatMap { listOf(it.allumer, it.eteindre) }.toSet()
+        if (allumer in caracteresPris || eteindre in caracteresPris) {
+            return getString(R.string.erreur_caractere_utilise)
+        }
+        return null
+    }
+
+    private fun confirmerReinitialisation() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.reinitialiser_titre)
+            .setMessage(R.string.reinitialiser_detail)
+            .setPositiveButton(R.string.reinitialiser_titre) { _, _ ->
+                appareils = AppareilsStore.reinitialiser(this)
+                construireAppareils()
+            }
+            .setNegativeButton(R.string.annuler, null)
+            .show()
     }
 
     /** Applique l'apparence d'une tuile selon son état et la liaison. */
