@@ -1,0 +1,50 @@
+name: Construire l'APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:      # permet de lancer la compilation a la main
+
+permissions:
+  contents: write          # necessaire pour publier la Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Installer Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Compiler l'APK de debogage
+        run: gradle assembleDebug --no-daemon
+
+      - name: Renommer l'APK
+        run: |
+          mv app/build/outputs/apk/debug/app-debug.apk PowerFlow.apk
+
+      - name: Publier l'APK comme artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PowerFlow-APK
+          path: PowerFlow.apk
+
+      # Cree une Release : le lien de telechargement est public,
+      # on peut l'ouvrir directement depuis le navigateur du telephone.
+      - name: Publier la Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: PowerFlow build ${{ github.run_number }}
+          files: PowerFlow.apk

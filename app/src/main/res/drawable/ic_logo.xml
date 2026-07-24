@@ -1,0 +1,26 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="128dp"
+    android:height="128dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Anneau : le circuit -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#2E3B4B"
+        android:strokeWidth="4"
+        android:pathData="M96,54 C96,77.2 77.2,96 54,96 C30.8,96 12,77.2 12,54 C12,30.8 30.8,12 54,12 C77.2,12 96,30.8 96,54 Z" />
+
+    <!-- Arc sous tension -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#F2A03D"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M54,12 C77.2,12 96,30.8 96,54 C96,66 91,76.8 83,84.5" />
+
+    <!-- Eclair -->
+    <path
+        android:fillColor="#F2A03D"
+        android:pathData="M62,26 L34,58 L50,58 L46,82 L74,50 L58,50 Z" />
+</vector>

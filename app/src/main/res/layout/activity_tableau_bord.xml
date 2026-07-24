@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/pf_fond"
+    android:paddingHorizontal="20dp"
+    android:paddingTop="28dp"
+    android:paddingBottom="20dp">
+
+    <TextView
+        style="@style/StyleTitre"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textSize="22sp" />
+
+    <TextView
+        style="@style/StyleMesure"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="@string/tableau_de_bord" />
+
+    <!-- Etat de la liaison -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/fond_panneau"
+        android:padding="16dp">
+
+        <View
+            android:id="@+id/pastille"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:background="@drawable/pastille"
+            android:backgroundTint="@color/pf_inactif" />
+
+        <TextView
+            android:id="@+id/etatTexte"
+            style="@style/StyleMesure"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:textColor="@color/pf_texte"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/boutonConnexion"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="12dp"
+        android:text="@string/se_connecter"
+        android:textColor="@color/pf_fond"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.06"
+        app:backgroundTint="@color/pf_courant"
+        app:cornerRadius="14dp" />
+
+    <!-- Rail d'alimentation + appareils -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="22dp"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/rail"
+            android:layout_width="3dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:alpha="0.35"
+            android:background="@drawable/rail"
+            android:backgroundTint="@color/pf_inactif" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/conteneurAppareils"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- Journal -->
+    <TextView
+        style="@style/StyleMesure"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="6dp"
+        android:text="@string/journal_titre"
+        android:textAllCaps="true"
+        android:letterSpacing="0.12" />
+
+    <ScrollView
+        android:id="@+id/journalScroll"
+        android:layout_width="match_parent"
+        android:layout_height="104dp"
+        android:background="@drawable/fond_journal"
+        android:padding="12dp"
+        android:scrollbars="none">
+
+        <TextView
+            android:id="@+id/journal"
+            style="@style/StyleMesure"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:lineSpacingExtra="3dp" />
+    </ScrollView>
+
+</LinearLayout>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PowerFlow</string>
+    <string name="slogan">Le courant, sous contrôle</string>
+    <string name="accroche">Pilotez vos appareils depuis votre téléphone, par Bluetooth.</string>
+    <string name="commencer">Commencer</string>
+
+    <string name="tableau_de_bord">Tableau de bord</string>
+    <string name="se_connecter">Se connecter</string>
+    <string name="se_deconnecter">Se déconnecter</string>
+    <string name="journal_titre">Journal</string>
+
+    <string name="detail_appareil">Broche %1$d · %2$c / %3$c</string>
+
+    <string name="choisir_module">Choisir le module</string>
+    <string name="aucun_appareil">Aucun appareil appairé</string>
+    <string name="aucun_appareil_detail">Appairez le HC-05 dans les réglages Bluetooth du téléphone, puis revenez ici. Le code est en général 1234 ou 0000.</string>
+    <string name="ouvrir_reglages">Ouvrir les réglages</string>
+    <string name="annuler">Annuler</string>
+</resources>

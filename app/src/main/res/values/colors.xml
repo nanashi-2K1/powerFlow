@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Palette "tableau electrique" : bleu-nuit metallique et cuivre sous tension -->
+    <color name="pf_fond">#0E1219</color>
+    <color name="pf_panneau">#171E28</color>
+    <color name="pf_bord">#242E3B</color>
+    <color name="pf_courant">#F2A03D</color>
+    <color name="pf_courant_sombre">#B9762A</color>
+    <color name="pf_inactif">#3A4553</color>
+    <color name="pf_texte">#EAF0F6</color>
+    <color name="pf_texte_faible">#8494A5</color>
+</resources>
