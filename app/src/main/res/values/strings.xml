@@ -6,9 +6,14 @@
     <string name="commencer">Commencer</string>
 
     <string name="tableau_de_bord">Tableau de bord</string>
+    <string name="etat_liaison">État de la liaison</string>
+    <string name="appareils">Appareils</string>
     <string name="se_connecter">Se connecter</string>
     <string name="se_deconnecter">Se déconnecter</string>
     <string name="journal_titre">Journal</string>
+
+    <string name="etat_allume">Allumé</string>
+    <string name="etat_eteint">Éteint</string>
 
     <string name="detail_appareil">Broche %1$d · %2$c / %3$c</string>
 

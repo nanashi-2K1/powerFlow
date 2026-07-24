@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Tuile appareil tactile. Le fond et les couleurs sont posés par le code
+     (fond_appareil_on / fond_appareil_off) selon l'état. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:minHeight="72dp"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:layout_marginStart="14dp"
-    android:layout_marginBottom="10dp"
-    android:background="@drawable/fond_panneau"
+    android:layout_marginBottom="12dp"
     android:paddingHorizontal="16dp"
     android:paddingVertical="14dp">
 
@@ -40,9 +41,19 @@
             android:textSize="11sp" />
     </LinearLayout>
 
-    <com.google.android.material.switchmaterial.SwitchMaterial
-        android:id="@+id/interrupteur"
+    <TextView
+        android:id="@+id/etat"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:textColor="@color/pf_texte_faible"
+        android:textSize="13sp" />
+
+    <View
+        android:id="@+id/point"
+        android:layout_width="9dp"
+        android:layout_height="9dp"
+        android:layout_marginStart="10dp"
+        android:background="@drawable/pastille"
+        android:backgroundTint="@color/pf_inactif" />
 
 </LinearLayout>

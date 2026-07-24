@@ -5,113 +5,111 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/pf_fond"
-    android:paddingHorizontal="20dp"
+    android:paddingHorizontal="24dp"
     android:paddingTop="28dp"
-    android:paddingBottom="20dp">
+    android:paddingBottom="18dp">
 
+    <!-- Titre de l'écran -->
     <TextView
         style="@style/StyleTitre"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textSize="22sp" />
+        android:text="@string/tableau_de_bord"
+        android:textSize="24sp" />
 
+    <!-- État de la liaison : lisible en un coup d'œil -->
     <TextView
-        style="@style/StyleMesure"
+        style="@style/StyleSurtitre"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text="@string/tableau_de_bord" />
+        android:layout_marginTop="24dp"
+        android:text="@string/etat_liaison" />
 
-    <!-- Etat de la liaison -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="10dp"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="@drawable/fond_panneau"
-        android:padding="16dp">
+        android:gravity="center_vertical">
 
         <View
             android:id="@+id/pastille"
-            android:layout_width="10dp"
-            android:layout_height="10dp"
+            android:layout_width="11dp"
+            android:layout_height="11dp"
             android:background="@drawable/pastille"
             android:backgroundTint="@color/pf_inactif" />
 
         <TextView
             android:id="@+id/etatTexte"
-            style="@style/StyleMesure"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginStart="12dp"
             android:textColor="@color/pf_texte"
-            android:textSize="13sp" />
+            android:textStyle="bold"
+            android:textSize="26sp"
+            android:letterSpacing="-0.01" />
     </LinearLayout>
 
+    <!-- Bouton de connexion -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/boutonConnexion"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginTop="12dp"
+        android:layout_height="52dp"
+        android:layout_marginTop="20dp"
         android:text="@string/se_connecter"
-        android:textColor="@color/pf_fond"
-        android:textSize="14sp"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
         android:textStyle="bold"
-        android:letterSpacing="0.06"
+        android:letterSpacing="0.02"
         app:backgroundTint="@color/pf_courant"
-        app:cornerRadius="14dp" />
+        app:cornerRadius="26dp"
+        app:icon="@android:drawable/stat_sys_data_bluetooth"
+        app:iconGravity="textStart"
+        app:iconTint="#FFFFFF" />
 
-    <!-- Rail d'alimentation + appareils -->
-    <LinearLayout
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="22dp"
+        android:background="@color/pf_bord" />
+
+    <!-- Appareils -->
+    <TextView
+        style="@style/StyleSurtitre"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:layout_marginBottom="12dp"
+        android:text="@string/appareils" />
+
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="22dp"
-        android:orientation="horizontal">
+        android:scrollbars="none">
 
-        <View
-            android:id="@+id/rail"
-            android:layout_width="3dp"
-            android:layout_height="match_parent"
-            android:layout_marginTop="6dp"
-            android:layout_marginBottom="6dp"
-            android:alpha="0.35"
-            android:background="@drawable/rail"
-            android:backgroundTint="@color/pf_inactif" />
-
-        <ScrollView
+        <LinearLayout
+            android:id="@+id/conteneurAppareils"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scrollbars="none">
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
 
-            <LinearLayout
-                android:id="@+id/conteneurAppareils"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
-        </ScrollView>
-    </LinearLayout>
-
-    <!-- Journal -->
+    <!-- Journal horodaté -->
     <TextView
-        style="@style/StyleMesure"
+        style="@style/StyleSurtitre"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:layout_marginBottom="6dp"
-        android:text="@string/journal_titre"
-        android:textAllCaps="true"
-        android:letterSpacing="0.12" />
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="@string/journal_titre" />
 
     <ScrollView
         android:id="@+id/journalScroll"
         android:layout_width="match_parent"
-        android:layout_height="104dp"
+        android:layout_height="108dp"
         android:background="@drawable/fond_journal"
-        android:padding="12dp"
+        android:padding="14dp"
         android:scrollbars="none">
 
         <TextView
@@ -119,6 +117,7 @@
             style="@style/StyleMesure"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textColor="@color/pf_texte_faible"
             android:textSize="11sp"
             android:lineSpacingExtra="3dp" />
     </ScrollView>

@@ -19,18 +19,22 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.switchmaterial.SwitchMaterial
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/** Une tuile affichée + l'appareil associé + son état courant. */
+private class Tuile(val vue: View, val appareil: Appareil, var actif: Boolean = false)
+
 /**
- * Ecran principal : connexion au HC-05 puis commande des appareils.
+ * Écran principal : connexion au HC-05 puis commande des appareils.
+ * Chaque appareil est une tuile tactile — on tape la tuile entière ;
+ * elle se remplit d'accent quand l'appareil est actif. Les tuiles sont
+ * inactives et grisées tant que la liaison n'est pas établie.
  */
 @SuppressLint("MissingPermission")
 class TableauBordActivity : AppCompatActivity() {
 
-    private lateinit var rail: View
     private lateinit var pastille: View
     private lateinit var etatTexte: TextView
     private lateinit var boutonConnexion: MaterialButton
@@ -38,7 +42,7 @@ class TableauBordActivity : AppCompatActivity() {
     private lateinit var journal: TextView
     private lateinit var journalScroll: ScrollView
 
-    private val interrupteurs = mutableListOf<SwitchMaterial>()
+    private val tuiles = mutableListOf<Tuile>()
     private val heure = SimpleDateFormat("HH:mm:ss", Locale.FRANCE)
 
     private lateinit var liaison: BluetoothSerial
@@ -50,7 +54,7 @@ class TableauBordActivity : AppCompatActivity() {
         if (resultats.values.all { it }) {
             choisirAppareil()
         } else {
-            noter("Permission Bluetooth refusee. Autorisez-la dans les reglages.")
+            noter("Permission Bluetooth refusée. Autorisez-la dans les réglages.")
         }
     }
 
@@ -65,7 +69,6 @@ class TableauBordActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_tableau_bord)
 
-        rail = findViewById(R.id.rail)
         pastille = findViewById(R.id.pastille)
         etatTexte = findViewById(R.id.etatTexte)
         boutonConnexion = findViewById(R.id.boutonConnexion)
@@ -79,7 +82,7 @@ class TableauBordActivity : AppCompatActivity() {
         )
 
         construireAppareils()
-        majEtat(false, "Non connecte")
+        majEtat(false, "Non connecté")
 
         boutonConnexion.setOnClickListener {
             if (liaison.estConnecte) {
@@ -89,7 +92,7 @@ class TableauBordActivity : AppCompatActivity() {
             }
         }
 
-        noter("Appairez d'abord le HC-05 dans les reglages Bluetooth du telephone (code 1234 ou 0000).")
+        noter("Appairez d'abord le HC-05 dans les réglages Bluetooth du téléphone (code 1234 ou 0000).")
     }
 
     override fun onDestroy() {
@@ -99,37 +102,68 @@ class TableauBordActivity : AppCompatActivity() {
 
     // ---------------------------------------------------------------- interface
 
-    /** Cree une ligne par appareil declare dans Appareils.liste. */
+    /** Crée une tuile par appareil déclaré dans Appareils.liste. */
     private fun construireAppareils() {
         val inflater = LayoutInflater.from(this)
 
         for (appareil in Appareils.liste) {
-            val ligne = inflater.inflate(R.layout.ligne_appareil, conteneur, false)
+            val vue = inflater.inflate(R.layout.ligne_appareil, conteneur, false)
 
-            ligne.findViewById<TextView>(R.id.icone).text = appareil.icone
-            ligne.findViewById<TextView>(R.id.nom).text = appareil.nom
-            ligne.findViewById<TextView>(R.id.detail).text =
+            vue.findViewById<TextView>(R.id.icone).text = appareil.icone
+            vue.findViewById<TextView>(R.id.nom).text = appareil.nom
+            vue.findViewById<TextView>(R.id.detail).text =
                 getString(R.string.detail_appareil, appareil.broche, appareil.allumer, appareil.eteindre)
 
-            val interrupteur = ligne.findViewById<SwitchMaterial>(R.id.interrupteur)
-            interrupteur.isEnabled = false
-            interrupteur.setOnCheckedChangeListener { bouton, coche ->
-                // Ignore les changements provoques par le code lui-meme.
-                if (!bouton.isPressed) return@setOnCheckedChangeListener
+            val tuile = Tuile(vue, appareil)
 
-                val caractere = if (coche) appareil.allumer else appareil.eteindre
+            vue.setOnClickListener {
+                if (!liaison.estConnecte) return@setOnClickListener
+
+                val nouvelEtat = !tuile.actif
+                val caractere = if (nouvelEtat) appareil.allumer else appareil.eteindre
                 if (liaison.envoyer(caractere)) {
-                    noter("${appareil.nom} ${if (coche) "allume" else "eteint"}  ->  $caractere")
+                    tuile.actif = nouvelEtat
+                    styleTuile(tuile, connecte = true)
+                    noter("${appareil.nom} ${if (nouvelEtat) "allumé" else "éteint"}  ->  $caractere")
                 } else {
-                    // L'envoi a echoue : on remet l'interrupteur dans son etat reel.
-                    bouton.isChecked = !coche
-                    noter("Envoi impossible, verifiez la connexion.")
+                    noter("Envoi impossible, vérifiez la connexion.")
                 }
             }
 
-            interrupteurs += interrupteur
-            conteneur.addView(ligne)
+            tuiles += tuile
+            conteneur.addView(vue)
+            styleTuile(tuile, connecte = false)
         }
+    }
+
+    /** Applique l'apparence d'une tuile selon son état et la liaison. */
+    private fun styleTuile(tuile: Tuile, connecte: Boolean) {
+        val allume = connecte && tuile.actif
+        val vue = tuile.vue
+
+        vue.isClickable = connecte
+        vue.alpha = if (connecte) 1f else 0.55f
+        vue.setBackgroundResource(
+            if (allume) R.drawable.fond_appareil_on else R.drawable.fond_appareil_off
+        )
+        // setBackgroundResource réinitialise le padding : on le remet.
+        val h = dp(16); val v = dp(14)
+        vue.setPadding(h, v, h, v)
+
+        val blanc = 0xFFFFFFFF.toInt()
+        val encre = ContextCompat.getColor(this, R.color.pf_texte)
+        val faible = ContextCompat.getColor(this, R.color.pf_texte_faible)
+        val inactif = ContextCompat.getColor(this, R.color.pf_inactif)
+
+        vue.findViewById<TextView>(R.id.nom).setTextColor(if (allume) blanc else encre)
+        vue.findViewById<TextView>(R.id.detail).setTextColor(if (allume) 0xB3FFFFFF.toInt() else faible)
+
+        val etat = vue.findViewById<TextView>(R.id.etat)
+        etat.setText(if (tuile.actif) R.string.etat_allume else R.string.etat_eteint)
+        etat.setTextColor(if (allume) 0xB3FFFFFF.toInt() else faible)
+
+        vue.findViewById<View>(R.id.point).backgroundTintList =
+            android.content.res.ColorStateList.valueOf(if (allume) blanc else inactif)
     }
 
     private fun majEtat(connecte: Boolean, message: String) {
@@ -137,26 +171,27 @@ class TableauBordActivity : AppCompatActivity() {
 
         val couleur = if (connecte) R.color.pf_courant else R.color.pf_inactif
         pastille.backgroundTintList = ContextCompat.getColorStateList(this, couleur)
-        rail.backgroundTintList = ContextCompat.getColorStateList(this, couleur)
-        rail.animate().alpha(if (connecte) 1f else 0.35f).setDuration(300L).start()
 
         boutonConnexion.text = getString(
             if (connecte) R.string.se_deconnecter else R.string.se_connecter
         )
 
-        interrupteurs.forEach { interrupteur ->
-            interrupteur.isEnabled = connecte
-            if (!connecte) interrupteur.isChecked = false
+        tuiles.forEach { tuile ->
+            if (!connecte) tuile.actif = false
+            styleTuile(tuile, connecte)
         }
 
         noter(message)
     }
 
-    /** Ajoute une ligne horodatee au journal et defile vers le bas. */
+    /** Ajoute une ligne horodatée au journal et défile vers le bas. */
     private fun noter(texte: String) {
         journal.append("${heure.format(Date())}  $texte\n")
         journalScroll.post { journalScroll.fullScroll(View.FOCUS_DOWN) }
     }
+
+    private fun dp(valeur: Int): Int =
+        (valeur * resources.displayMetrics.density).toInt()
 
     // ---------------------------------------------------------------- bluetooth
 
@@ -166,7 +201,7 @@ class TableauBordActivity : AppCompatActivity() {
     private fun lancerConnexion() {
         val adaptateur = adaptateur()
         if (adaptateur == null) {
-            noter("Ce telephone n'a pas de Bluetooth.")
+            noter("Ce téléphone n'a pas de Bluetooth.")
             return
         }
         if (!adaptateur.isEnabled) {
@@ -192,7 +227,7 @@ class TableauBordActivity : AppCompatActivity() {
         choisirAppareil()
     }
 
-    /** Propose la liste des appareils deja appaires. */
+    /** Propose la liste des appareils déjà appairés. */
     private fun choisirAppareil() {
         val appaires: List<BluetoothDevice> = adaptateur()?.bondedDevices?.toList().orEmpty()
 
