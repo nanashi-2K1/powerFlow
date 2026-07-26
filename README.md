@@ -44,8 +44,18 @@ gradle assembleDebug
    **Débrancher le HC-05 pendant le téléversement** : il occupe les broches série.
 2. Alimenter le montage, puis appairer le HC-05 dans les réglages Bluetooth
    du téléphone (code `1234` ou `0000`).
-3. Ouvrir PowerFlow → *Commencer* → *Se connecter* → choisir le HC-05.
-4. Les interrupteurs deviennent actifs une fois la liaison établie.
+3. Ouvrir PowerFlow → *Commencer* → onglet **Connexion** → *Se connecter* →
+   choisir le HC-05.
+4. Revenir à l'onglet **Appareils** : les tuiles deviennent actives une fois
+   la liaison établie.
+
+L'écran du tableau de bord est organisé en deux onglets (barre de
+navigation en bas), pour laisser toute la place aux tuiles sur petit
+écran :
+
+- **Appareils** : uniquement la grille de tuiles de contrôle.
+- **Connexion** : état de la liaison, bouton de connexion et journal
+  horodaté.
 
 ## Protocole
 
@@ -65,11 +75,11 @@ dans le montage d'origine. Les broches 7-9 sont prêtes à l'emploi pour un
 appareil supplémentaire câblé plus tard.
 
 L'Arduino renvoie `ON:1` ou `OFF:1` en accusé de réception ; l'application
-l'affiche dans le journal, en bas de l'écran.
+l'affiche dans le journal, sur l'onglet **Connexion**.
 
 ## Ajouter, modifier ou supprimer un appareil depuis l'application
 
-Dans le tableau de bord :
+Dans l'onglet **Appareils** :
 
 - **+ Ajouter** (en haut de la liste) ouvre un formulaire : nom, icône (à
   choisir parmi les pictogrammes disponibles), broche (2 à 9) et caractères

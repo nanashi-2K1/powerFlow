@@ -189,7 +189,13 @@ Le reste du fichier gère surtout des cas pratiques :
   connecter ;
 - ouvrir un formulaire (`ouvrirDialogueAppareil`) pour ajouter, modifier ou
   supprimer un appareil, avec des vérifications (`validerAppareil`) pour
-  éviter par exemple deux appareils sur la même broche.
+  éviter par exemple deux appareils sur la même broche ;
+- basculer entre les deux onglets de l'écran (`pageAppareils` /
+  `pageConnexion`) en changeant simplement leur `visibility` (`VISIBLE` ou
+  `GONE`) au clic sur la barre de navigation du bas — les deux pages
+  existent en permanence dans la mémoire de l'écran, seule leur visibilité
+  change, ce qui évite d'avoir à gérer plusieurs écrans (`Activity`)
+  séparés pour un simple changement d'onglet.
 
 ### Les fichiers `.xml` du dossier `res/`
 

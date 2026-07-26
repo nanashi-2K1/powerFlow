@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/ongletAppareils"
+        android:icon="@drawable/ic_grille"
+        android:title="@string/onglet_appareils" />
+    <item
+        android:id="@+id/ongletConnexion"
+        android:icon="@android:drawable/stat_sys_data_bluetooth"
+        android:title="@string/onglet_connexion" />
+</menu>

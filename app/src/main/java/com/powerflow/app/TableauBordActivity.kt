@@ -22,6 +22,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import java.text.SimpleDateFormat
@@ -47,6 +48,9 @@ class TableauBordActivity : AppCompatActivity() {
     private lateinit var conteneur: LinearLayout
     private lateinit var journal: TextView
     private lateinit var journalScroll: ScrollView
+    private lateinit var pageAppareils: View
+    private lateinit var pageConnexion: View
+    private lateinit var navigation: BottomNavigationView
 
     private lateinit var appareils: MutableList<Appareil>
     private val tuiles = mutableListOf<Tuile>()
@@ -83,6 +87,16 @@ class TableauBordActivity : AppCompatActivity() {
         conteneur = findViewById(R.id.conteneurAppareils)
         journal = findViewById(R.id.journal)
         journalScroll = findViewById(R.id.journalScroll)
+        pageAppareils = findViewById(R.id.pageAppareils)
+        pageConnexion = findViewById(R.id.pageConnexion)
+        navigation = findViewById(R.id.navigation)
+
+        navigation.setOnItemSelectedListener { item ->
+            val versAppareils = item.itemId == R.id.ongletAppareils
+            pageAppareils.visibility = if (versAppareils) View.VISIBLE else View.GONE
+            pageConnexion.visibility = if (versAppareils) View.GONE else View.VISIBLE
+            true
+        }
 
         appareils = AppareilsStore.charger(this)
 
