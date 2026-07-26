@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Palette sombre : mêmes noms que colors.xml, valeurs adaptées au thème
+         nuit (suivi automatiquement selon les réglages du téléphone). -->
+    <color name="pf_fond">#121212</color>
+    <color name="pf_panneau">#1C1C1E</color>
+    <color name="pf_bord">#2E2E30</color>
+    <color name="pf_courant">#22B587</color>
+    <color name="pf_courant_sombre">#1A8F6B</color>
+    <color name="pf_inactif">#48484A</color>
+    <color name="pf_texte">#F2F2F2</color>
+    <color name="pf_texte_faible">#9A9A9F</color>
+    <color name="pf_icone">#D1D1D6</color>
+    <color name="pf_journal_fond">#1C1C1E</color>
+</resources>

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Même thème qu'en clair (values/themes.xml) : seule la barre de statut
+         change (icônes claires sur fond sombre). Les couleurs pf_* basculent
+         déjà automatiquement via values-night/colors.xml. -->
     <style name="Theme.PowerFlow" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/pf_courant</item>
         <item name="colorPrimaryVariant">@color/pf_courant_sombre</item>
@@ -14,26 +17,6 @@
         <item name="android:textColorPrimary">@color/pf_texte</item>
         <item name="android:statusBarColor">@color/pf_fond</item>
         <item name="android:navigationBarColor">@color/pf_fond</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
-    </style>
-
-    <style name="StyleTitre">
-        <item name="android:fontFamily">sans-serif</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/pf_texte</item>
-        <item name="android:letterSpacing">-0.01</item>
-    </style>
-
-    <style name="StyleMesure">
-        <item name="android:fontFamily">monospace</item>
-        <item name="android:textColor">@color/pf_texte_faible</item>
-        <item name="android:textSize">12sp</item>
-        <item name="android:letterSpacing">0.04</item>
-    </style>
-
-    <style name="StyleSurtitre" parent="StyleMesure">
-        <item name="android:textAllCaps">true</item>
-        <item name="android:letterSpacing">0.14</item>
-        <item name="android:textSize">11sp</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
     </style>
 </resources>

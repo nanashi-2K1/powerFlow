@@ -3,6 +3,9 @@
 Prototype de maison connectée : une application Android pilote des appareils
 branchés sur un Arduino, via un module Bluetooth HC-05.
 
+L'application suit automatiquement le thème clair/sombre choisi dans les
+réglages du téléphone (aucun réglage à faire dans l'application elle-même).
+
 ## Contenu
 
 | Dossier | Rôle |

@@ -10,4 +10,5 @@
     <color name="pf_texte">#1A1A1A</color>
     <color name="pf_texte_faible">#8A8A8E</color>
     <color name="pf_icone">#3A3A3C</color>
+    <color name="pf_journal_fond">#FAFAFA</color>
 </resources>

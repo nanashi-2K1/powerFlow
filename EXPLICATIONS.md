@@ -206,6 +206,17 @@ identifiants (`R.id.xxx`). C'est la séparation classique en développement
 d'interface : le "quoi afficher" d'un côté, le "que faire quand on clique"
 de l'autre.
 
+Un dossier mérite une explication : `res/values-night/`. Android permet de
+déclarer plusieurs versions d'un même fichier de ressources, chacune dans un
+dossier au nom qualifié (`-night`, mais aussi `-fr`, `-large`...) ; le
+système choisit automatiquement la bonne version selon le contexte — ici,
+selon que le mode sombre du téléphone est activé ou non. `values-night/colors.xml`
+redéfinit exactement les mêmes noms de couleur (`pf_fond`, `pf_texte`...)
+avec des valeurs adaptées à un fond sombre ; comme tout le reste de
+l'application référence ces couleurs par leur nom (`@color/pf_texte`) et
+jamais par leur valeur exacte, le changement de thème est automatique et
+ne demande aucune modification du code Kotlin.
+
 ## 5. Petit lexique
 
 | Terme | Explication simple |
