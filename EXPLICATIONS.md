@@ -190,12 +190,42 @@ Le reste du fichier gère surtout des cas pratiques :
 - ouvrir un formulaire (`ouvrirDialogueAppareil`) pour ajouter, modifier ou
   supprimer un appareil, avec des vérifications (`validerAppareil`) pour
   éviter par exemple deux appareils sur la même broche ;
-- basculer entre les deux onglets de l'écran (`pageAppareils` /
-  `pageConnexion`) en changeant simplement leur `visibility` (`VISIBLE` ou
-  `GONE`) au clic sur la barre de navigation du bas — les deux pages
-  existent en permanence dans la mémoire de l'écran, seule leur visibilité
-  change, ce qui évite d'avoir à gérer plusieurs écrans (`Activity`)
-  séparés pour un simple changement d'onglet.
+- basculer entre les trois onglets de l'écran (`pageAppareils` /
+  `pageConnexion` / `pageHistorique`) en changeant simplement leur
+  `visibility` (`VISIBLE` ou `GONE`) au clic sur la barre de navigation du
+  bas — les trois pages existent en permanence dans la mémoire de l'écran,
+  seule leur visibilité change, ce qui évite d'avoir à gérer plusieurs
+  écrans (`Activity`) séparés pour un simple changement d'onglet.
+
+### Le minuteur : exécuter du code "plus tard"
+
+Le bouton ⏱ sur chaque tuile programme une action différée (allumer,
+éteindre, ou éteindre automatiquement après une durée). Il n'y a rien de
+magique côté Arduino : au moment voulu, l'application envoie exactement le
+même caractère que si l'utilisateur avait appuyé sur la tuile.
+
+Le mécanisme Android qui permet ça s'appelle un `Handler` :
+
+```kotlin
+private val handlerMinuteur = Handler(Looper.getMainLooper())
+
+handlerMinuteur.postDelayed(runnablePrincipal, delaiMillis)
+```
+
+`postDelayed` veut dire : "exécute ce bloc de code (`runnablePrincipal`)
+dans `delaiMillis` millisecondes, mais uniquement si l'application est
+toujours ouverte". C'est une minuterie logicielle, pas un vrai minuteur
+matériel : si l'utilisateur ferme l'application ou que le téléphone la met
+en veille profonde, le décompte s'arrête. Pour annuler un minuteur avant
+qu'il ne se déclenche, on utilise `handlerMinuteur.removeCallbacks(...)`
+(fait par la fonction `annulerMinuteur`).
+
+Le même principe (`handlerTick`, dans la propriété `tick`) fait "battre"
+l'écran toutes les secondes pour rafraîchir les décomptes affichés et
+vérifier si un appareil est allumé depuis trop longtemps
+(`rafraichirCompteurs`) — c'est ce qui alimente l'onglet **Historique** et
+l'alerte de fonctionnement prolongé, stockés par `UsageStore.kt` (même
+principe de sauvegarde en JSON que `AppareilsStore` dans `Appareil.kt`).
 
 ### Les fichiers `.xml` du dossier `res/`
 
@@ -229,3 +259,4 @@ ne demande aucune modification du code Kotlin.
 | JSON | Un format de texte standard pour écrire des informations structurées, lisible à la fois par un humain et par un programme |
 | SharedPreferences | Le "carnet" où une application Android range de petites données entre deux lancements |
 | data class (Kotlin) | Une classe qui sert uniquement à regrouper des informations liées, sans comportement complexe |
+| Handler / postDelayed | Un mécanisme Android pour exécuter du code après un délai, tant que l'application reste ouverte (pas un vrai minuteur matériel) |

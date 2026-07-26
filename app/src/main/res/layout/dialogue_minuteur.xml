@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="8dp">
+
+        <TextView
+            style="@style/StyleSurtitre"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/minuteur_action" />
+
+        <RadioGroup
+            android:id="@+id/groupeAction"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/radioAllumer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:checked="true"
+                android:text="@string/minuteur_allumer" />
+
+            <RadioButton
+                android:id="@+id/radioEteindre"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/minuteur_eteindre" />
+        </RadioGroup>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/minuteur_delai">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/champDelaiValeur"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:maxLength="3" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:hint="@string/minuteur_unite">
+
+                <AutoCompleteTextView
+                    android:id="@+id/champDelaiUnite"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <CheckBox
+            android:id="@+id/caseAutoOff"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/minuteur_auto_off" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/conteneurAutoOff"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="@string/minuteur_auto_off_minutes"
+            android:visibility="gone">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/champAutoOffMinutes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLength="3" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            style="@style/StyleMesure"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="4dp"
+            android:text="@string/minuteur_aide"
+            android:textSize="11sp" />
+
+    </LinearLayout>
+</ScrollView>

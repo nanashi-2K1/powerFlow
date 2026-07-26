@@ -52,13 +52,15 @@ gradle assembleDebug
 4. Revenir à l'onglet **Appareils** : les tuiles deviennent actives une fois
    la liaison établie.
 
-L'écran du tableau de bord est organisé en deux onglets (barre de
+L'écran du tableau de bord est organisé en trois onglets (barre de
 navigation en bas), pour laisser toute la place aux tuiles sur petit
 écran :
 
-- **Appareils** : uniquement la grille de tuiles de contrôle.
+- **Appareils** : la grille de tuiles de contrôle.
 - **Connexion** : état de la liaison, bouton de connexion et journal
   horodaté.
+- **Historique** : temps de fonctionnement de chaque appareil et seuil
+  d'alerte (voir plus bas).
 
 ## Protocole
 
@@ -105,6 +107,37 @@ ne fonctionnera que si
 Pour changer le comportement du croquis lui-même (au-delà de 8 appareils, ou
 d'autres broches), modifier `arduino/PowerFlow/PowerFlow.ino` — tableaux
 `broches`, `CMD_ALLUMER`, `CMD_ETEINDRE` — et le retéléverser sur la carte.
+
+## Minuteur par appareil
+
+L'icône ⏱ sur chaque tuile ouvre un minuteur, sans toucher au croquis
+Arduino : il se contente d'envoyer le même caractère qu'un appui manuel, au
+bon moment.
+
+- **Programmer** une action différée : allumer ou éteindre dans un délai
+  choisi en secondes ou en minutes.
+- **Extinction automatique** : en programmant un allumage, cocher
+  « Éteindre automatiquement après » pour limiter la durée de
+  fonctionnement (ex. allumer puis couper 10 min plus tard).
+- Toucher à nouveau l'icône ⏱ pendant qu'un minuteur est actif affiche le
+  temps restant et permet de l'annuler.
+
+**Important** : le minuteur n'agit que pendant que l'application reste
+ouverte et connectée (pas de service en arrière-plan). Fermer l'application
+ou perdre la connexion Bluetooth annule les minuteurs en attente.
+
+## Historique et alerte de fonctionnement prolongé
+
+L'onglet **Historique** affiche, pour chaque appareil, le temps total
+allumé (cumulé) et, s'il est actuellement allumé, depuis combien de temps.
+Un bouton **Réinitialiser** efface ces statistiques.
+
+Le champ **« Alerter si un appareil reste allumé plus de »** définit un
+seuil, en minutes (60 par défaut). Si un appareil dépasse ce seuil pendant
+que l'application est ouverte, la tuile se signale (texte orange) et un
+message apparaît dans le journal — jusqu'à ce que l'appareil soit éteint.
+Cette surveillance a la même limite que les minuteurs : elle ne fonctionne
+que pendant que l'application est ouverte.
 
 ## Notes de câblage
 

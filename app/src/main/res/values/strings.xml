@@ -13,6 +13,7 @@
 
     <string name="onglet_appareils">Appareils</string>
     <string name="onglet_connexion">Connexion</string>
+    <string name="onglet_historique">Historique</string>
 
     <string name="etat_allume">Allumé</string>
     <string name="etat_eteint">Éteint</string>
@@ -50,4 +51,47 @@
     <string name="erreur_caractere_identique">Les caractères « allumer » et « éteindre » doivent être différents.</string>
     <string name="erreur_broche_utilisee">Cette broche est déjà utilisée par un autre appareil.</string>
     <string name="erreur_caractere_utilise">Ce caractère est déjà utilisé par un autre appareil.</string>
+
+    <string name="minuteur_titre">Minuteur</string>
+    <string name="minuteur_action">Action à programmer</string>
+    <string name="minuteur_allumer">Allumer</string>
+    <string name="minuteur_eteindre">Éteindre</string>
+    <string name="minuteur_delai">Dans</string>
+    <string name="minuteur_unite">Unité</string>
+    <string name="minuteur_unite_secondes">Secondes</string>
+    <string name="minuteur_unite_minutes">Minutes</string>
+    <string name="minuteur_auto_off">Éteindre automatiquement après</string>
+    <string name="minuteur_auto_off_minutes">Durée (minutes)</string>
+    <string name="minuteur_aide">Le minuteur n\'agit que si l\'application reste ouverte et connectée : il envoie la commande au bon moment, comme un appui manuel sur la tuile. Fermer l\'application ou perdre la connexion l\'annule.</string>
+    <string name="minuteur_programmer">Programmer</string>
+    <string name="minuteur_non_connecte">Connectez-vous d\'abord (onglet Connexion).</string>
+    <string name="minuteur_erreur_delai">Indiquez un délai supérieur à 0.</string>
+    <string name="minuteur_erreur_auto_off">Indiquez une durée supérieure à 0 pour l\'extinction automatique.</string>
+
+    <string name="minuteur_statut_titre">Minuteur en cours</string>
+    <string name="minuteur_statut_detail">%1$s dans %2$s.</string>
+    <string name="minuteur_annuler">Annuler le minuteur</string>
+    <string name="minuteur_fermer">Fermer</string>
+
+    <string name="minuteur_compte_allumage">Allumage dans %1$s</string>
+    <string name="minuteur_compte_extinction">Extinction dans %1$s</string>
+    <string name="minuteur_compte_auto_off">Extinction auto dans %1$s</string>
+
+    <string name="minuteur_journal_programme">%1$s : %2$s programmé dans %3$s</string>
+    <string name="minuteur_journal_auto_off_programme">%1$s : extinction automatique programmée %2$s après l\'allumage</string>
+    <string name="minuteur_journal_annule">%1$s : minuteur annulé</string>
+
+    <string name="seuil_alerte_label">Alerter si un appareil reste allumé plus de</string>
+    <string name="seuil_alerte_unite">Minutes</string>
+    <string name="alerte_journal">⚠ %1$s est allumé depuis plus de %2$d min</string>
+    <string name="alerte_compte">⚠ Allumé depuis %1$s</string>
+
+    <string name="historique_liste_titre">Temps de fonctionnement</string>
+    <string name="historique_reinitialiser">Réinitialiser</string>
+    <string name="historique_reinitialiser_titre">Réinitialiser les statistiques</string>
+    <string name="historique_reinitialiser_detail">Effacer les temps de fonctionnement enregistrés pour tous les appareils ?</string>
+    <string name="historique_jamais_utilise">Jamais allumé pour l\'instant</string>
+    <string name="historique_temps_total">Temps total allumé : %1$s</string>
+    <string name="historique_en_cours">Allumé depuis %1$s</string>
+    <string name="historique_derniere_activite">Dernière extinction : %1$s</string>
 </resources>

@@ -9,12 +9,17 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
+import android.widget.CheckBox
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.RadioGroup
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -32,11 +37,22 @@ import java.util.Locale
 /** Une tuile affichée + l'appareil associé + son état courant. */
 private class Tuile(val vue: View, val appareil: Appareil, var actif: Boolean = false)
 
+/** Ce qu'un minuteur en attente doit faire une fois son délai écoulé. */
+private enum class TypeMinuteur { ALLUMAGE, EXTINCTION, EXTINCTION_AUTO }
+
+/** Un minuteur programmé pour un appareil (identifié par sa broche). */
+private class EtatMinuteur(val type: TypeMinuteur, val finMillis: Long, val runnable: Runnable)
+
 /**
  * Écran principal : connexion au HC-05 puis commande des appareils.
  * Chaque appareil est une tuile tactile — on tape la tuile entière ;
  * elle se remplit d'accent quand l'appareil est actif. Les tuiles sont
  * inactives et grisées tant que la liaison n'est pas établie.
+ *
+ * Les minuteurs et le suivi d'usage (onglet Historique) ne fonctionnent que
+ * pendant que cet écran reste ouvert et connecté : il n'y a pas de service
+ * en arrière-plan, uniquement des `Handler.postDelayed` liés au cycle de
+ * vie de cette Activity (annulés dans `onDestroy`).
  */
 @SuppressLint("MissingPermission")
 class TableauBordActivity : AppCompatActivity() {
@@ -50,11 +66,34 @@ class TableauBordActivity : AppCompatActivity() {
     private lateinit var journalScroll: ScrollView
     private lateinit var pageAppareils: View
     private lateinit var pageConnexion: View
+    private lateinit var pageHistorique: View
     private lateinit var navigation: BottomNavigationView
+    private lateinit var conteneurHistorique: LinearLayout
+    private lateinit var champSeuilAlerte: TextInputEditText
+    private lateinit var boutonReinitialiserHistorique: MaterialButton
 
     private lateinit var appareils: MutableList<Appareil>
+    private lateinit var usage: MutableMap<Int, UsageAppareil>
     private val tuiles = mutableListOf<Tuile>()
     private val heure = SimpleDateFormat("HH:mm:ss", Locale.FRANCE)
+    private val heureCourte = SimpleDateFormat("dd/MM HH:mm", Locale.FRANCE)
+
+    /** Broche -> minuteur en attente (au plus un par appareil). */
+    private val minuteurs = mutableMapOf<Int, EtatMinuteur>()
+    /** Broche -> instant (epoch millis) où l'appareil a été allumé, s'il l'est. */
+    private val sessionsEnCours = mutableMapOf<Int, Long>()
+    /** Broches déjà signalées pour la session d'allumage en cours (évite de répéter l'alerte). */
+    private val alerteDeclenchee = mutableSetOf<Int>()
+
+    private val handlerMinuteur = Handler(Looper.getMainLooper())
+    private val handlerTick = Handler(Looper.getMainLooper())
+    private val tick = object : Runnable {
+        override fun run() {
+            rafraichirCompteurs()
+            rafraichirHistoriqueSiVisible()
+            handlerTick.postDelayed(this, 1000)
+        }
+    }
 
     private lateinit var liaison: BluetoothSerial
 
@@ -89,16 +128,22 @@ class TableauBordActivity : AppCompatActivity() {
         journalScroll = findViewById(R.id.journalScroll)
         pageAppareils = findViewById(R.id.pageAppareils)
         pageConnexion = findViewById(R.id.pageConnexion)
+        pageHistorique = findViewById(R.id.pageHistorique)
         navigation = findViewById(R.id.navigation)
+        conteneurHistorique = findViewById(R.id.conteneurHistorique)
+        champSeuilAlerte = findViewById(R.id.champSeuilAlerte)
+        boutonReinitialiserHistorique = findViewById(R.id.boutonReinitialiserHistorique)
 
         navigation.setOnItemSelectedListener { item ->
-            val versAppareils = item.itemId == R.id.ongletAppareils
-            pageAppareils.visibility = if (versAppareils) View.VISIBLE else View.GONE
-            pageConnexion.visibility = if (versAppareils) View.GONE else View.VISIBLE
+            pageAppareils.visibility = if (item.itemId == R.id.ongletAppareils) View.VISIBLE else View.GONE
+            pageConnexion.visibility = if (item.itemId == R.id.ongletConnexion) View.VISIBLE else View.GONE
+            pageHistorique.visibility = if (item.itemId == R.id.ongletHistorique) View.VISIBLE else View.GONE
+            if (item.itemId == R.id.ongletHistorique) construireHistorique()
             true
         }
 
         appareils = AppareilsStore.charger(this)
+        usage = UsageStore.charger(this)
 
         liaison = BluetoothSerial(
             onEtat = { connecte, message -> majEtat(connecte, message) },
@@ -119,10 +164,40 @@ class TableauBordActivity : AppCompatActivity() {
         boutonAjouter.setOnClickListener { ouvrirDialogueAppareil(null) }
         boutonAjouter.setOnLongClickListener { confirmerReinitialisation(); true }
 
+        champSeuilAlerte.setText(UsageStore.seuilAlerteMinutes(this).toString())
+        champSeuilAlerte.setOnFocusChangeListener { _, aLeFocus ->
+            if (!aLeFocus) {
+                val minutes = champSeuilAlerte.text?.toString()?.trim()?.toIntOrNull()
+                if (minutes != null && minutes > 0) {
+                    UsageStore.definirSeuilAlerte(this, minutes)
+                    alerteDeclenchee.clear()
+                } else {
+                    champSeuilAlerte.setText(UsageStore.seuilAlerteMinutes(this).toString())
+                }
+            }
+        }
+
+        boutonReinitialiserHistorique.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.historique_reinitialiser_titre)
+                .setMessage(R.string.historique_reinitialiser_detail)
+                .setPositiveButton(R.string.historique_reinitialiser) { _, _ ->
+                    usage.clear()
+                    UsageStore.sauvegarder(this, usage)
+                    construireHistorique()
+                }
+                .setNegativeButton(R.string.annuler, null)
+                .show()
+        }
+
+        handlerTick.post(tick)
+
         noter("Appairez d'abord le HC-05 dans les réglages Bluetooth du téléphone (code 1234 ou 0000).")
     }
 
     override fun onDestroy() {
+        handlerTick.removeCallbacksAndMessages(null)
+        handlerMinuteur.removeCallbacksAndMessages(null)
         liaison.deconnecter()
         super.onDestroy()
     }
@@ -156,21 +231,20 @@ class TableauBordActivity : AppCompatActivity() {
 
                 vue.setOnClickListener {
                     if (!liaison.estConnecte) return@setOnClickListener
-
-                    val nouvelEtat = !tuile.actif
-                    val caractere = if (nouvelEtat) appareil.allumer else appareil.eteindre
-                    if (liaison.envoyer(caractere)) {
-                        tuile.actif = nouvelEtat
-                        styleTuile(tuile, connecte = true)
-                        noter("${appareil.nom} ${if (nouvelEtat) "allumé" else "éteint"}  ->  $caractere")
-                    } else {
-                        noter("Envoi impossible, vérifiez la connexion.")
-                    }
+                    basculerAppareil(tuile, !tuile.actif)
                 }
 
                 vue.setOnLongClickListener {
                     ouvrirDialogueAppareil(appareil)
                     true
+                }
+
+                vue.findViewById<ImageButton>(R.id.boutonMinuteur).setOnClickListener {
+                    if (!liaison.estConnecte) {
+                        Toast.makeText(this, R.string.minuteur_non_connecte, Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                    ouvrirDialogueMinuteur(appareil)
                 }
 
                 tuiles += tuile
@@ -189,6 +263,8 @@ class TableauBordActivity : AppCompatActivity() {
 
             conteneur.addView(ligne)
         }
+
+        rafraichirCompteurs()
     }
 
     /** Ouvre le dialogue d'ajout (existant == null) ou de modification/suppression. */
@@ -225,9 +301,12 @@ class TableauBordActivity : AppCompatActivity() {
 
         if (existant != null) {
             builder.setNeutralButton(R.string.supprimer) { _, _ ->
+                annulerMinuteur(existant.broche, notifier = false)
+                sessionsEnCours.remove(existant.broche)
                 appareils.removeAll { it.broche == existant.broche }
                 AppareilsStore.sauvegarder(this, appareils)
                 construireAppareils()
+                construireHistorique()
             }
         }
 
@@ -257,6 +336,7 @@ class TableauBordActivity : AppCompatActivity() {
             }
             AppareilsStore.sauvegarder(this, appareils)
             construireAppareils()
+            construireHistorique()
             dialogue.dismiss()
         }
     }
@@ -295,8 +375,11 @@ class TableauBordActivity : AppCompatActivity() {
             .setTitle(R.string.reinitialiser_titre)
             .setMessage(R.string.reinitialiser_detail)
             .setPositiveButton(R.string.reinitialiser_titre) { _, _ ->
+                minuteurs.keys.toList().forEach { annulerMinuteur(it, notifier = false) }
+                sessionsEnCours.clear()
                 appareils = AppareilsStore.reinitialiser(this)
                 construireAppareils()
+                construireHistorique()
             }
             .setNegativeButton(R.string.annuler, null)
             .show()
@@ -338,6 +421,11 @@ class TableauBordActivity : AppCompatActivity() {
         }
         vue.findViewById<ImageView>(R.id.icone).imageTintList =
             android.content.res.ColorStateList.valueOf(teintePicto)
+
+        vue.findViewById<ImageButton>(R.id.boutonMinuteur).apply {
+            isEnabled = connecte
+            imageTintList = android.content.res.ColorStateList.valueOf(teintePicto)
+        }
     }
 
     private fun majEtat(connecte: Boolean, message: String) {
@@ -351,6 +439,9 @@ class TableauBordActivity : AppCompatActivity() {
         )
 
         tuiles.forEach { tuile ->
+            if (!connecte && tuile.actif) {
+                enregistrerUsage(tuile.appareil.broche, false)
+            }
             if (!connecte) tuile.actif = false
             styleTuile(tuile, connecte)
         }
@@ -366,6 +457,292 @@ class TableauBordActivity : AppCompatActivity() {
 
     private fun dp(valeur: Int): Int =
         (valeur * resources.displayMetrics.density).toInt()
+
+    // ---------------------------------------------------------------- allumer / éteindre
+
+    /** Envoie la commande de bascule ; si l'envoi réussit, met à jour tuile, journal et usage. */
+    private fun basculerAppareil(tuile: Tuile, nouvelEtat: Boolean): Boolean {
+        val appareil = tuile.appareil
+        val caractere = if (nouvelEtat) appareil.allumer else appareil.eteindre
+        if (!liaison.envoyer(caractere)) {
+            noter("Envoi impossible, vérifiez la connexion.")
+            return false
+        }
+        tuile.actif = nouvelEtat
+        styleTuile(tuile, connecte = true)
+        noter("${appareil.nom} ${if (nouvelEtat) "allumé" else "éteint"}  ->  $caractere")
+        enregistrerUsage(appareil.broche, nouvelEtat)
+        return true
+    }
+
+    // ---------------------------------------------------------------- minuteur
+
+    /** Ouvre le statut du minuteur en cours pour cet appareil, ou le formulaire pour en créer un. */
+    private fun ouvrirDialogueMinuteur(appareil: Appareil) {
+        val actif = minuteurs[appareil.broche]
+        if (actif != null) {
+            val restant = (actif.finMillis - System.currentTimeMillis()).coerceAtLeast(0)
+            val actionRes = if (actif.type == TypeMinuteur.ALLUMAGE) R.string.minuteur_allumer else R.string.minuteur_eteindre
+            AlertDialog.Builder(this)
+                .setTitle(R.string.minuteur_statut_titre)
+                .setMessage(getString(R.string.minuteur_statut_detail, getString(actionRes), formatCompteARebours(restant)))
+                .setPositiveButton(R.string.minuteur_annuler) { _, _ -> annulerMinuteur(appareil.broche, notifier = true) }
+                .setNegativeButton(R.string.minuteur_fermer, null)
+                .show()
+            return
+        }
+
+        val vue = LayoutInflater.from(this).inflate(R.layout.dialogue_minuteur, null)
+        val groupeAction = vue.findViewById<RadioGroup>(R.id.groupeAction)
+        val champDelaiValeur = vue.findViewById<TextInputEditText>(R.id.champDelaiValeur)
+        val champDelaiUnite = vue.findViewById<AutoCompleteTextView>(R.id.champDelaiUnite)
+        val caseAutoOff = vue.findViewById<CheckBox>(R.id.caseAutoOff)
+        val conteneurAutoOff = vue.findViewById<View>(R.id.conteneurAutoOff)
+        val champAutoOffMinutes = vue.findViewById<TextInputEditText>(R.id.champAutoOffMinutes)
+
+        val uniteMinutes = getString(R.string.minuteur_unite_minutes)
+        val uniteSecondes = getString(R.string.minuteur_unite_secondes)
+        champDelaiUnite.setAdapter(
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, listOf(uniteMinutes, uniteSecondes))
+        )
+        champDelaiUnite.setText(uniteMinutes, false)
+
+        fun majVisibilite() {
+            val estAllumer = groupeAction.checkedRadioButtonId == R.id.radioAllumer
+            caseAutoOff.visibility = if (estAllumer) View.VISIBLE else View.GONE
+            conteneurAutoOff.visibility = if (estAllumer && caseAutoOff.isChecked) View.VISIBLE else View.GONE
+        }
+        majVisibilite()
+        groupeAction.setOnCheckedChangeListener { _, _ -> majVisibilite() }
+        caseAutoOff.setOnCheckedChangeListener { _, _ -> majVisibilite() }
+
+        val dialogue = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.minuteur_titre) + " · " + appareil.nom)
+            .setView(vue)
+            .setNegativeButton(R.string.annuler, null)
+            .setPositiveButton(R.string.minuteur_programmer, null)
+            .show()
+
+        dialogue.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val allumer = groupeAction.checkedRadioButtonId == R.id.radioAllumer
+            val valeur = champDelaiValeur.text?.toString()?.trim()?.toIntOrNull()
+            val enSecondes = champDelaiUnite.text?.toString() == uniteSecondes
+            val autoOffDemande = allumer && caseAutoOff.isChecked
+            val autoOffMinutes = champAutoOffMinutes.text?.toString()?.trim()?.toIntOrNull()
+
+            if (valeur == null || valeur <= 0) {
+                Toast.makeText(this, R.string.minuteur_erreur_delai, Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+            if (autoOffDemande && (autoOffMinutes == null || autoOffMinutes <= 0)) {
+                Toast.makeText(this, R.string.minuteur_erreur_auto_off, Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
+            val delaiMillis = if (enSecondes) valeur * 1_000L else valeur * 60_000L
+            programmerMinuteur(appareil, allumer, delaiMillis, if (autoOffDemande) autoOffMinutes else null)
+            dialogue.dismiss()
+        }
+    }
+
+    /** Programme l'envoi différé d'une commande, avec extinction automatique optionnelle enchaînée. */
+    private fun programmerMinuteur(appareil: Appareil, allumer: Boolean, delaiMillis: Long, autoOffMinutes: Int?) {
+        annulerMinuteur(appareil.broche, notifier = false)
+
+        val runnablePrincipal = Runnable {
+            minuteurs.remove(appareil.broche)
+            val tuile = tuiles.firstOrNull { it.appareil.broche == appareil.broche }
+            if (tuile != null && liaison.estConnecte) {
+                basculerAppareil(tuile, allumer)
+            } else {
+                noter("${appareil.nom} : minuteur déclenché, envoi impossible (non connecté).")
+            }
+
+            if (allumer && autoOffMinutes != null) {
+                val delaiAutoOff = autoOffMinutes * 60_000L
+                val runnableAutoOff = Runnable {
+                    minuteurs.remove(appareil.broche)
+                    val tuileVisee = tuiles.firstOrNull { it.appareil.broche == appareil.broche }
+                    if (tuileVisee != null && liaison.estConnecte) {
+                        basculerAppareil(tuileVisee, false)
+                    } else {
+                        noter("${appareil.nom} : extinction automatique, envoi impossible (non connecté).")
+                    }
+                    rafraichirCompteurs()
+                }
+                handlerMinuteur.postDelayed(runnableAutoOff, delaiAutoOff)
+                minuteurs[appareil.broche] = EtatMinuteur(
+                    TypeMinuteur.EXTINCTION_AUTO,
+                    System.currentTimeMillis() + delaiAutoOff,
+                    runnableAutoOff
+                )
+                noter(getString(R.string.minuteur_journal_auto_off_programme, appareil.nom, formatDuree(delaiAutoOff)))
+            }
+            rafraichirCompteurs()
+        }
+
+        handlerMinuteur.postDelayed(runnablePrincipal, delaiMillis)
+        minuteurs[appareil.broche] = EtatMinuteur(
+            if (allumer) TypeMinuteur.ALLUMAGE else TypeMinuteur.EXTINCTION,
+            System.currentTimeMillis() + delaiMillis,
+            runnablePrincipal
+        )
+
+        noter(
+            getString(
+                R.string.minuteur_journal_programme,
+                appareil.nom,
+                getString(if (allumer) R.string.minuteur_allumer else R.string.minuteur_eteindre),
+                formatDuree(delaiMillis)
+            )
+        )
+        rafraichirCompteurs()
+    }
+
+    /** Annule le minuteur en attente pour cette broche, s'il y en a un. */
+    private fun annulerMinuteur(broche: Int, notifier: Boolean) {
+        val etat = minuteurs.remove(broche) ?: return
+        handlerMinuteur.removeCallbacks(etat.runnable)
+        if (notifier) {
+            appareils.firstOrNull { it.broche == broche }?.let {
+                noter(getString(R.string.minuteur_journal_annule, it.nom))
+            }
+        }
+        rafraichirCompteurs()
+    }
+
+    /** Met à jour, sur chaque tuile, le petit texte de minuteur ou d'alerte d'usage prolongé. */
+    private fun rafraichirCompteurs() {
+        val seuilMillis = UsageStore.seuilAlerteMinutes(this) * 60_000L
+
+        tuiles.forEach { tuile ->
+            val broche = tuile.appareil.broche
+            val compteur = tuile.vue.findViewById<TextView>(R.id.compteur)
+            val allume = liaison.estConnecte && tuile.actif
+            val debutSession = sessionsEnCours[broche]
+            val enAlerte = debutSession != null && (System.currentTimeMillis() - debutSession) >= seuilMillis
+
+            when {
+                enAlerte -> {
+                    if (broche !in alerteDeclenchee) {
+                        alerteDeclenchee += broche
+                        val minutes = UsageStore.seuilAlerteMinutes(this)
+                        val message = getString(R.string.alerte_journal, tuile.appareil.nom, minutes)
+                        noter(message)
+                        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+                    }
+                    compteur.text = getString(R.string.alerte_compte, formatDuree(System.currentTimeMillis() - debutSession!!))
+                    compteur.setTextColor(ContextCompat.getColor(this, R.color.pf_alerte))
+                    compteur.visibility = View.VISIBLE
+                }
+                minuteurs[broche] != null -> {
+                    val etatMinuteur = minuteurs.getValue(broche)
+                    val restant = (etatMinuteur.finMillis - System.currentTimeMillis()).coerceAtLeast(0)
+                    val libelleRes = when (etatMinuteur.type) {
+                        TypeMinuteur.ALLUMAGE -> R.string.minuteur_compte_allumage
+                        TypeMinuteur.EXTINCTION -> R.string.minuteur_compte_extinction
+                        TypeMinuteur.EXTINCTION_AUTO -> R.string.minuteur_compte_auto_off
+                    }
+                    compteur.text = getString(libelleRes, formatCompteARebours(restant))
+                    compteur.setTextColor(
+                        if (allume) 0xB3FFFFFF.toInt() else ContextCompat.getColor(this, R.color.pf_texte_faible)
+                    )
+                    compteur.visibility = View.VISIBLE
+                }
+                else -> compteur.visibility = View.GONE
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- usage / historique
+
+    /** Démarre ou clôture une session d'allumage pour cette broche, et persiste le cumul. */
+    private fun enregistrerUsage(broche: Int, allume: Boolean) {
+        val maintenant = System.currentTimeMillis()
+        val actuel = usage[broche] ?: UsageAppareil()
+
+        if (allume) {
+            sessionsEnCours[broche] = maintenant
+            usage[broche] = actuel.copy(derniereMiseEnMarche = maintenant)
+        } else {
+            val debut = sessionsEnCours.remove(broche)
+            val dureeSession = if (debut != null) (maintenant - debut).coerceAtLeast(0) else 0L
+            usage[broche] = actuel.copy(
+                dureeTotaleMillis = actuel.dureeTotaleMillis + dureeSession,
+                derniereExtinction = maintenant
+            )
+            alerteDeclenchee.remove(broche)
+        }
+
+        UsageStore.sauvegarder(this, usage)
+        rafraichirHistoriqueSiVisible()
+    }
+
+    /** (Re)construit la liste de l'onglet Historique à partir des appareils et de l'usage courants. */
+    private fun construireHistorique() {
+        conteneurHistorique.removeAllViews()
+        val inflater = LayoutInflater.from(this)
+
+        appareils.forEach { appareil ->
+            val vue = inflater.inflate(R.layout.ligne_historique, conteneurHistorique, false)
+            vue.findViewById<ImageView>(R.id.icone).setImageResource(appareil.icone)
+            vue.findViewById<TextView>(R.id.nom).text = appareil.nom
+
+            val donnees = usage[appareil.broche]
+            val debutSession = sessionsEnCours[appareil.broche]
+            val dureeAffichee = (donnees?.dureeTotaleMillis ?: 0L) +
+                (debutSession?.let { System.currentTimeMillis() - it } ?: 0L)
+
+            vue.findViewById<TextView>(R.id.dureeTotale).text =
+                getString(R.string.historique_temps_total, formatDuree(dureeAffichee))
+
+            val statut = vue.findViewById<TextView>(R.id.statut)
+            when {
+                debutSession != null -> {
+                    statut.text = getString(R.string.historique_en_cours, formatDuree(System.currentTimeMillis() - debutSession))
+                    statut.setTextColor(ContextCompat.getColor(this, R.color.pf_courant))
+                }
+                donnees?.derniereExtinction != null -> {
+                    statut.text = getString(R.string.historique_derniere_activite, heureCourte.format(Date(donnees.derniereExtinction)))
+                    statut.setTextColor(ContextCompat.getColor(this, R.color.pf_texte_faible))
+                }
+                else -> {
+                    statut.text = getString(R.string.historique_jamais_utilise)
+                    statut.setTextColor(ContextCompat.getColor(this, R.color.pf_texte_faible))
+                }
+            }
+
+            conteneurHistorique.addView(vue)
+        }
+    }
+
+    private fun rafraichirHistoriqueSiVisible() {
+        if (::pageHistorique.isInitialized && pageHistorique.visibility == View.VISIBLE) {
+            construireHistorique()
+        }
+    }
+
+    /** Formate une durée en "X j Y h", "X h Y min" ou "X min". */
+    private fun formatDuree(millis: Long): String {
+        val totalMinutes = millis / 60_000
+        val jours = totalMinutes / (60 * 24)
+        val heures = (totalMinutes % (60 * 24)) / 60
+        val minutes = totalMinutes % 60
+        return when {
+            jours > 0 -> "$jours j $heures h"
+            heures > 0 -> "$heures h $minutes min"
+            minutes > 0 -> "$minutes min"
+            else -> "< 1 min"
+        }
+    }
+
+    /** Formate un temps restant en "mm:ss" pour l'affichage du compte à rebours. */
+    private fun formatCompteARebours(millisRestants: Long): String {
+        val totalSecondes = (millisRestants / 1000).coerceAtLeast(0)
+        val minutes = totalSecondes / 60
+        val secondes = totalSecondes % 60
+        return String.format(Locale.FRANCE, "%d:%02d", minutes, secondes)
+    }
 
     // ---------------------------------------------------------------- bluetooth
 

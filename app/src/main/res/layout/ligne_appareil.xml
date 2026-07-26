@@ -9,18 +9,39 @@
     android:paddingHorizontal="16dp"
     android:paddingVertical="14dp">
 
-    <ImageView
-        android:id="@+id/icone"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:scaleType="fitCenter"
-        android:contentDescription="@null" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/icone"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:scaleType="fitCenter"
+            android:contentDescription="@null" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/boutonMinuteur"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="4dp"
+            android:src="@drawable/ic_horloge"
+            android:contentDescription="@string/minuteur_titre" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/nom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="8dp"
         android:textColor="@color/pf_texte"
         android:textSize="16sp"
         android:textStyle="bold"
@@ -62,5 +83,15 @@
             android:maxLines="1"
             android:ellipsize="end" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/compteur"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textSize="11sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:visibility="gone" />
 
 </LinearLayout>

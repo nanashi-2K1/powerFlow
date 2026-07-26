@@ -8,4 +8,8 @@
         android:id="@+id/ongletConnexion"
         android:icon="@android:drawable/stat_sys_data_bluetooth"
         android:title="@string/onglet_connexion" />
+    <item
+        android:id="@+id/ongletHistorique"
+        android:icon="@drawable/ic_horloge"
+        android:title="@string/onglet_historique" />
 </menu>

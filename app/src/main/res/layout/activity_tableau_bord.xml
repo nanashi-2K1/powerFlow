@@ -164,6 +164,104 @@
             </ScrollView>
         </LinearLayout>
 
+        <!-- Page Historique : temps de fonctionnement et seuil d'alerte -->
+        <LinearLayout
+            android:id="@+id/pageHistorique"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="20dp">
+
+            <TextView
+                style="@style/StyleSurtitre"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/onglet_historique" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    style="@style/StyleMesure"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="12sp"
+                    android:text="@string/seuil_alerte_label" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:hint="@string/seuil_alerte_unite">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/champSeuilAlerte"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:maxLength="3" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="18dp"
+                android:background="@color/pf_bord" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="10dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    style="@style/StyleSurtitre"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/historique_liste_titre" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/boutonReinitialiserHistorique"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingHorizontal="10dp"
+                    android:text="@string/historique_reinitialiser"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:paddingBottom="16dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/conteneurHistorique"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </ScrollView>
+        </LinearLayout>
+
     </FrameLayout>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
